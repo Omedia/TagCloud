@@ -1,0 +1,115 @@
+<?php
+
+require_once(drupal_get_path('module', 'tagcloud').'/tagcloud.admin.inc');
+
+/**
+ * Implements hook_theme()
+ */
+function tagcloud_theme($existing, $type, $theme, $path) {
+  return array(
+    'tagcloud_block_view' => array (
+      'variables' =>  array('tags' => array()),
+      'template'  =>  'templates/block_view'
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function tagcloud_block_info() {
+  $block_ids = variable_get('tagcloud_block_ids', array());
+  $blocks = array();
+  foreach($block_ids as $key =>  $value) {
+    $block_data = _tagcloud_get_block_data('tagcloud_'.$value);
+    if (is_array($block_data)) {
+      $title = block_load('tagcloud', 'tagcloud_'.$value);
+      $blocks[$block_data['data']['delta']] = array(
+        'info'  => $title->title, 
+        'cache' => DRUPAL_NO_CACHE,
+      );
+    }
+  }
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function tagcloud_block_view($delta = '') {
+  if ($delta) {
+    $block_data = _tagcloud_get_block_data($delta);
+    $vid = $block_data['data']['vocabulary'];
+    
+    $terms = taxonomy_get_tree($vid);
+    $terms = array_map('_tagcloud_terms_with_counts_callback', $terms);
+    
+    $min_tag_uses = 9999999;
+    $max_tag_uses = 0;
+    
+    foreach($terms as $key => $term) {
+      if ($term['count'] == 0) {
+        unset($terms[$key]);
+        continue;
+      }
+      if ($term['count'] > $max_tag_uses) {
+        $max_tag_uses = $term['count'];
+      }
+      if ($term['count'] < $min_tag_uses) {
+        $min_tag_uses = $term['count'];
+      }
+    }
+    
+    $min_font_size = $block_data['data']['min_font_size'];
+    $max_font_size = $block_data['data']['max_font_size'];
+    
+    foreach($terms as $key => $term) {
+      $weight = (log($term['count']) - log($min_tag_uses)) / (log($max_tag_uses) - log($min_tag_uses));  	
+  	  $font_size = $min_font_size + round(($max_font_size - $min_font_size)*$weight, 2);
+  	  
+  	  $terms[$key]['weight'] = $weight;
+  	  $terms[$key]['font_size'] = $font_size;
+  	  
+  	  $tags[$term['tid']] = $weight;
+    }
+    
+    if ($block_data['data']['tags_limit'] != 0 && $block_data['data']['tags_limit'] < sizeof($tags)) {
+      arsort($tags, SORT_NUMERIC);
+      $tids = array_keys($tags);
+      for ($i=0; $i< $block_data['data']['tags_limit']; $i++) {
+        $tags_limited[$tids[$i]] = array_shift($tags);
+      }
+      
+      foreach($terms as $key => $term) {
+        if (!in_array($term['tid'], array_keys($tags_limited))) {
+          unset($terms[$key]);
+        } 
+      }
+    }
+  	
+  	$title = block_load('tagcloud', 'tagcloud_'.$delta);
+    $title = $title->title;
+    
+    $block['subject'] = $title; 
+    $block['content'] = theme('tagcloud_block_view', array('tags' => $terms));
+    
+    return $block;
+  }
+}
+
+
+/**
+ * callback function for terms mapping
+ */
+function _tagcloud_terms_with_counts_callback($item) {
+  $nodes = taxonomy_select_nodes($item->tid);
+  return array('tid' => $item->tid, 'name' => $item->name, 'count' => count($nodes));
+}
+
+
+/**
+ * Get data for block by delta
+ */
+function _tagcloud_get_block_data($delta) {
+  return variable_get($delta, array());
+}
