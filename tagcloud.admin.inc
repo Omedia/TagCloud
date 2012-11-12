@@ -3,7 +3,7 @@
 /*
  * Implements hook_menu()
  */
-function tagcloud_block_block_menu() {
+function tagcloud_menu() {
   $items['admin/structure/block/add-tagcloud-block'] = array(
     'title'            => 'Add Tagcloud block',
     'description'      => 'Adds a new tagcloud block.',
@@ -41,10 +41,9 @@ function tagcloud_block_block_menu() {
 /**
  * Menu callback for add tagcloud block form
  */
-function tagcloud_block_add_block_form() {
+function tagcloud_add_block_form() {
   module_load_include('inc', 'block', 'block.admin');
-  $form = array();
-  $form = block_admin_configure($form, $form_state, 'tagcloud_block', NULL);
+  $form = block_admin_configure($form, $form_state, 'tagcloud', NULL);
   $form_state['build_info']['base_form_id'] = 'block_add_block_form';
   $form['#validate'] = array();
   $form['#submit'] = array('tagcloud_block_add_block_form_submit');
@@ -54,7 +53,7 @@ function tagcloud_block_add_block_form() {
 /**
  * Implements hook_block_configure().
  */
-function tagcloud_block_block_configure_block($form, &$form_state) {
+function tagcloud_block_configure_block($form, &$form_state) {
   /* get delta */
   if (!empty($form_state['values']['delta'])) {
     $block_data = _tagcloud_get_block_data($form_state['values']['delta']);
@@ -66,7 +65,7 @@ function tagcloud_block_block_configure_block($form, &$form_state) {
     '#type'           =>  'select',
     '#title'          =>  t('Choose vocabulary to generate tagcloud from'),
     '#options'        =>  $vocabularies,
-    '#default_value'  =>  isset($block_data['data']['vocabulary']) ? $block_data['data']['vocabulary'] : 1,
+    '#default_value'  =>  $block_data['data']['vocabulary'],
   );
   
   $form['tags_limit'] = array (
@@ -101,7 +100,7 @@ function tagcloud_block_block_configure_block($form, &$form_state) {
 /**
  * Generate basic config array
  */
-function tagcloud_block_block_get_config($delta = '') {
+function tagcloud_block_get_config($delta = '') {
   return array('delta' => $delta);
 }
 
@@ -109,7 +108,7 @@ function tagcloud_block_block_get_config($delta = '') {
 /**
  * hook_block_configure().
  */
-function tagcloud_block_block_configure($delta = '') {
+function tagcloud_block_configure($delta = '') {
   $form_state = array('values' => tagcloud_block_get_config($delta));
   return tagcloud_block_configure_block(array(), $form_state);
 }
@@ -117,7 +116,7 @@ function tagcloud_block_block_configure($delta = '') {
 /*
  * add block form submit callback
  */
-function tagcloud_block_block_add_block_form_submit($form, &$form_state) {
+function tagcloud_block_add_block_form_submit($form, &$form_state) {
   $block_ids = variable_get('tagcloud_block_ids', array());
   $delta = empty($block_ids) ? 1 : max($block_ids) + 1;
   $form_state['values']['delta'] = 'tagcloud_'.$delta;
@@ -168,7 +167,7 @@ function tagcloud_block_block_add_block_form_submit($form, &$form_state) {
 /**
  * hook_block_save().
  */
-function tagcloud_block_block_save($delta = '', $edit = array()) {
+function tagcloud_block_save($delta = '', $edit = array()) {
   _tagcloud_block_save($delta, $edit);
 }
 
@@ -185,9 +184,9 @@ function _tagcloud_block_save($delta = '', $values = array()) {
 /**
  * Block delete menu callback
  */
-function tagcloud_block_block_delete($form, &$form_state, $delta = 0) {
+function tagcloud_block_delete($form, &$form_state, $delta = 0) {
   $block_data = _tagcloud_get_block_data('tagcloud_'.$delta);
-  $title = block_load('tagcloud_block', 'tagcloud_'.$delta);
+  $title = block_load('tagcloud', 'tagcloud_'.$delta);
   $title = $title->title;
   $form['block_title'] = array('#type' => 'hidden', '#value' => $title);
   $form['delta'] = array('#type' => 'hidden', '#value' => $delta);
@@ -198,7 +197,7 @@ function tagcloud_block_block_delete($form, &$form_state, $delta = 0) {
 /**
  * Deletion of tagcloud blocks.
  */
-function tagcloud_block_block_delete_submit($form, &$form_state) {
+function tagcloud_block_delete_submit($form, &$form_state) {
   /* delete our variables */
   $delta = $form_state['values']['delta'];
   $block_ids = variable_get('tagcloud_block_ids', array());
@@ -208,11 +207,11 @@ function tagcloud_block_block_delete_submit($form, &$form_state) {
   variable_del('tagcloud_'.$delta);
 
   db_delete('block')
-    ->condition('module', 'tagcloud_block')
+    ->condition('module', 'tagcloud')
     ->condition('delta', $delta)
     ->execute();
   db_delete('block_role')
-    ->condition('module', 'tagcloud_block')
+    ->condition('module', 'tagcloud')
     ->condition('delta', $delta)
     ->execute();
   drupal_set_message(t('The block "%name" has been removed.', array('%name' => $form_state['values']['block_title'])));
@@ -237,6 +236,6 @@ function _tagcloud_form_block_admin_display_form_alter(&$form, $form_state) {
 /**
  * blocks listing form alter function
  */
-function tagcloud_block_form_block_admin_display_form_alter(&$form, $form_state) {
+function tagcloud_form_block_admin_display_form_alter(&$form, $form_state) {
   return _tagcloud_form_block_admin_display_form_alter($form, $form_state);
 }

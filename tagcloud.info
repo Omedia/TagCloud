@@ -1,5 +1,4 @@
-name = TagCloud Block
+name = TagCloud
 description = With this module, you can easily create Tagcloud blocks from any standard taxonomy vocabulary.
 core = 7.x
 dependencies[] = taxonomy
-dependencies[] = block
