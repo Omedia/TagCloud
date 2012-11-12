@@ -43,6 +43,7 @@ function tagcloud_menu() {
  */
 function tagcloud_add_block_form() {
   module_load_include('inc', 'block', 'block.admin');
+  $form = array();
   $form = block_admin_configure($form, $form_state, 'tagcloud', NULL);
   $form_state['build_info']['base_form_id'] = 'block_add_block_form';
   $form['#validate'] = array();
@@ -65,7 +66,7 @@ function tagcloud_block_configure_block($form, &$form_state) {
     '#type'           =>  'select',
     '#title'          =>  t('Choose vocabulary to generate tagcloud from'),
     '#options'        =>  $vocabularies,
-    '#default_value'  =>  $block_data['data']['vocabulary'],
+    '#default_value'  =>  isset($block_data['data']['vocabulary']) ? $block_data['data']['vocabulary'] : 1,
   );
   
   $form['tags_limit'] = array (
