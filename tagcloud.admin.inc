@@ -44,7 +44,7 @@ function tagcloud_block_block_menu() {
 function tagcloud_block_add_block_form() {
   module_load_include('inc', 'block', 'block.admin');
   $form = array();
-  $form = block_admin_configure($form, $form_state, 'tagcloud', NULL);
+  $form = block_admin_configure($form, $form_state, 'tagcloud_block', NULL);
   $form_state['build_info']['base_form_id'] = 'block_add_block_form';
   $form['#validate'] = array();
   $form['#submit'] = array('tagcloud_block_add_block_form_submit');
@@ -187,7 +187,7 @@ function _tagcloud_block_save($delta = '', $values = array()) {
  */
 function tagcloud_block_block_delete($form, &$form_state, $delta = 0) {
   $block_data = _tagcloud_get_block_data('tagcloud_'.$delta);
-  $title = block_load('tagcloud', 'tagcloud_'.$delta);
+  $title = block_load('tagcloud_block', 'tagcloud_'.$delta);
   $title = $title->title;
   $form['block_title'] = array('#type' => 'hidden', '#value' => $title);
   $form['delta'] = array('#type' => 'hidden', '#value' => $delta);
@@ -208,11 +208,11 @@ function tagcloud_block_block_delete_submit($form, &$form_state) {
   variable_del('tagcloud_'.$delta);
 
   db_delete('block')
-    ->condition('module', 'tagcloud')
+    ->condition('module', 'tagcloud_block')
     ->condition('delta', $delta)
     ->execute();
   db_delete('block_role')
-    ->condition('module', 'tagcloud')
+    ->condition('module', 'tagcloud_block')
     ->condition('delta', $delta)
     ->execute();
   drupal_set_message(t('The block "%name" has been removed.', array('%name' => $form_state['values']['block_title'])));

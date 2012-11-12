@@ -1,6 +1,6 @@
 <?php
 
-require_once(drupal_get_path('module', 'tagcloud').'/tagcloud.admin.inc');
+require_once(drupal_get_path('module', 'tagcloud_block').'/tagcloud.admin.inc');
 
 /**
  * Implements hook_theme()
@@ -23,7 +23,7 @@ function tagcloud_block_block_info() {
   foreach($block_ids as $key =>  $value) {
     $block_data = _tagcloud_get_block_data('tagcloud_'.$value);
     if (is_array($block_data)) {
-      $title = block_load('tagcloud', 'tagcloud_'.$value);
+      $title = block_load('tagcloud_block', 'tagcloud_'.$value);
       $blocks[$block_data['data']['delta']] = array(
         'info'  => $title->title, 
         'cache' => DRUPAL_NO_CACHE,
@@ -87,7 +87,7 @@ function tagcloud_block_block_view($delta = '') {
       }
     }
   	
-  	$title = block_load('tagcloud', 'tagcloud_'.$delta);
+  	$title = block_load('tagcloud_block', 'tagcloud_'.$delta);
     $title = $title->title;
     
     $block['subject'] = $title; 
