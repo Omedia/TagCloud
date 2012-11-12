@@ -5,7 +5,7 @@ require_once(drupal_get_path('module', 'tagcloud').'/tagcloud.admin.inc');
 /**
  * Implements hook_theme()
  */
-function tagcloud_theme($existing, $type, $theme, $path) {
+function tagcloud_block_block_theme($existing, $type, $theme, $path) {
   return array(
     'tagcloud_block_view' => array (
       'variables' =>  array('tags' => array()),
@@ -17,7 +17,7 @@ function tagcloud_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_block_info().
  */
-function tagcloud_block_info() {
+function tagcloud_block_block_info() {
   $block_ids = variable_get('tagcloud_block_ids', array());
   $blocks = array();
   foreach($block_ids as $key =>  $value) {
@@ -36,7 +36,7 @@ function tagcloud_block_info() {
 /**
  * Implements hook_block_view().
  */
-function tagcloud_block_view($delta = '') {
+function tagcloud_block_block_view($delta = '') {
   if ($delta) {
     $block_data = _tagcloud_get_block_data($delta);
     $vid = $block_data['data']['vocabulary'];
